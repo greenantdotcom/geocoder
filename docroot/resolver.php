@@ -2,9 +2,7 @@
 	
 	require_once 'geocoder.php';
 	
-#	header('Content-type: text/html' );
-	
-#	echo "<PRE>";
+	header( 'Content-type: application/json' );
 	
 	$responses				=	array();
 	$tarpit					=	12;
