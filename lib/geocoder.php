@@ -6,6 +6,9 @@ date_default_timezone_set('America/Los_Angeles');
 
 define( 'THIS_REQUEST', 'req'.mt_rand( 888888, 9999999 ) );
 
+if( !extension_loaded( 'memcache' ) )
+	dl( 'memcache.so' );
+
 class Geocoder
 {
 	protected $responses;         // Internally populated. Stack of each named geocoder response.
