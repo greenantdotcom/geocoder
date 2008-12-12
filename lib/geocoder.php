@@ -279,7 +279,7 @@ class Geocoder
 			$endpoints	=	array
 							(
 #								'http://10.50.8.14/~markhers/google.php',
-								'http://green-ant.com/plain/google.php',
+#								'http://green-ant.com/plain/google.php',
 								'http://maps.google.com/maps/geo',
 							);
 			
