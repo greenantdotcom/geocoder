@@ -983,7 +983,7 @@ class Geocoder
 				return 'rdrr';
 			}
 
-			return 'appserver';
+			return 'geocoder_rw';
 		}
 
 		if($set == 'set')
