@@ -1,5 +1,7 @@
 <?php
 
+require_once( '/httpd/apps/coretools/lib/ZoneResolver.php' );
+
 date_default_timezone_set('America/Los_Angeles');
 
 define( 'THIS_REQUEST', 'req'.mt_rand( 888888, 9999999 ) );
@@ -874,7 +876,29 @@ class Geocoder
 				return $connection;
 			}
 			
-			$connection = new PDO('mysql:dbname=hg;host=devdb.main.aresdirect.com', self::testConnectionParam('mysql'), '=a6edu?h3xuy');
+			switch( ZoneResolver::Resolve() )
+			{
+				case 'stage':
+				case 'deploy':
+				
+					$hostname	=	'dbmain.colo.aresdirect.com';
+					$password	=	'69w8EbapHe4A5ra#ujuf+e6e';
+					break;
+				
+				default:
+				
+					$hostname	=	'devdb.main.aresdirect.com';
+					$password	=	'*hEs9?gaf7daduq_br2+4t7-';
+					break;
+			}
+			
+#insert into user ( Host, User, Password ) values ( '10.100.2.0/255.255.255.0', 'geocoder_rw', PASSWORD( '69w8EbapHe4A5ra#ujuf+e6e' ) );
+#insert into db ( Host, User, Db, Select_priv, Insert_priv, Update_priv, Delete_priv ) values ( '10.100.2.0/255.255.255.0', 'geocoder_rw', 'geocoder', 'Y', 'Y', 'Y', 'Y' );
+
+#insert into user ( Host, User, Password ) values ( '10.50.0.0/255.255.0.0', 'geocoder_rw', PASSWORD( '*hEs9?gaf7daduq_br2+4t7-' ) );
+#insert into db ( Host, User, Db, Select_priv, Insert_priv, Update_priv, Delete_priv ) values ( '10.50.0.0/255.255.0.0', 'geocoder_rw', 'geocoder', 'Y', 'Y', 'Y', 'Y' );
+			
+			$connection = new PDO( 'mysql:dbname=geocoder;host='.$hostname, self::testConnectionParam('mysql'), $password );
 			
 			$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
@@ -902,14 +926,26 @@ class Geocoder
 
 			if(!is_object($con) or self::testConnectionParam())
 			{
-				$con = new Memcache();
-
-				if(!$con->pconnect('atlas', self::testConnectionParam('memcacheDB')))
+				$con	=	new Memcache();
+				
+				switch( ZoneResolver::Resolve() )
 				{
-					throw new Exception("Failed to connect to memcacheDB.");
+					case 'stage':
+					case 'deploy':
+					
+						$hostname	=	'dbslave1.colo.aresdirect.com';
+						break;
+					
+					default:
+					
+						### TODO: fix this - devdb perhaps?
+						$hostname	=	'10.50.7.50';
 				}
+				
+				if( !$con->pconnect( $hostname, self::testConnectionParam('memcacheDB' ) ) )
+					throw new Exception("Failed to connect to memcacheDB.");
 			}
-
+			
 			return $con;
 		}
 		catch(Exception $e)
