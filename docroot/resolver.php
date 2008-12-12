@@ -1,10 +1,27 @@
 <?php
 	
-	require_once 'geocoder.php';
-	
 	header( 'Content-type: application/json' );
 	
+	if( $_SERVER['REQUEST_METHOD'] == 'HEAD' )
+		exit;
+	
+	require_once 'geocoder.php';
+	
 	$responses				=	array();
+	
+	/*
+	 *
+	 *	Number of seconds to sleep after an external request, successful or not. Even if memcachedb thinks the rate isn't too fast,
+	 *	we should try our best to not overload the requests. By forcibly tarpitting the response, we are sure that no one client
+	 *	can run too fast by itself.
+	 *	
+	 *	This is not a "global" guarantee, however, as multiple incoming clients change the dyanmic. Imagine, if you will, 1000 separate PHP
+	 *	instances using the geocoder client. Each will request one, and then sit for 12 seconds. But we still had a moment where we were
+	 *	trying to make 1000 simultaneous requests against the gateway, and memcacheDB or Google will figure that out and rate-limit that
+	 *	aspect.
+	 *
+	 */
+	
 	$tarpit					=	12;
 	
 	if( isset( $_REQUEST['location'] ) )
@@ -17,6 +34,10 @@
 		$geocoder->execute();
 		
 		$responses				=	$geocoder->getResponse();
+		
+		/*
+		 *	If the response isn't internal, it was external, so tarpit
+		 */
 		
 		if( !in_array( $responses['source'], array( 'internal', 'internal_fail' ) ) )
 			usleep( $tarpit * 100000 );
@@ -55,11 +76,21 @@
 				
 				$responses[$key]		=	$geocoder->getResponse();
 				
+				/*
+				 *	If the response isn't internal, it was external, so tarpit
+				 */
+				
 				if( !in_array( $responses[$key]['source'], array( 'internal', 'internal_fail' ) ) )
 					usleep( $tarpit * 100000 );
 			}
 		}
 	}
 	
+	/*
+	 *	The precision argument makes for encoding JSON as completely as possible for floats. I ran into
+	 *	issues with lower precisions where I wouldn't get the desired depth of accuracy.
+	 */
+	
 	ini_set( 'precision', 20 );
 	echo json_encode($responses);
+	
