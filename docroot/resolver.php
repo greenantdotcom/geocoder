@@ -63,14 +63,14 @@
 		if( !empty( $_REQUEST['locations'] ) )
 		{
 			end( $_REQUEST['locations'] );
-			$lastKey				=	key( $_REQUEST['locations'] );
-			
-			$geocoder			=	new Geocoder( $location );
+			$lastKey					=	key( $_REQUEST['locations'] );
 			
 			foreach( $_REQUEST['locations'] as $key => $location)
 			{
 				if( isset( $_REQUEST['skipCache'] ) )
 					$geocoder->skipCache();
+				
+				$geocoder				=	new Geocoder( $location );
 				
 				$geocoder->execute();
 				
